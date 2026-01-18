@@ -1,0 +1,40 @@
+name: Build My App
+
+on:
+  workflow_dispatch: # इससे आप बटन दबाकर बिल्ड शुरू कर पाएंगे
+  push:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unzip File
+        run: unzip project.zip
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Build APK
+        run: |
+          # यह कमांड ऑटोमेटिक आपके फोल्डर को ढूंढेगी
+          FOLDER=$(find . -maxdepth 2 -name "pubspec.yaml" -exec dirname {} \;)
+          cd "$FOLDER"
+          flutter pub get
+          flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-app-bundle
+          path: "**/build/app/outputs/flutter-apk/app-release.apk"
